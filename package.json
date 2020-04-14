@@ -24,5 +24,12 @@
   "homepage": "https://github.com/bschlenk/babel-plugin-lit-property-sugar#readme",
   "dependencies": {
     "lodash": "^4.17.15"
+  },
+  "devDependencies": {
+    "@babel/plugin-syntax-class-properties": "^7.8.3",
+    "@babel/plugin-syntax-decorators": "^7.8.3",
+    "@babel/plugin-syntax-typescript": "^7.8.3",
+    "babel-plugin-tester": "^9.0.1",
+    "jest": "^25.3.0"
   }
 }
