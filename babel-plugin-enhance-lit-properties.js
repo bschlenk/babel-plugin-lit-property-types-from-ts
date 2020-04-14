@@ -46,6 +46,8 @@
  * ```
  */
 
+const { kebabCase, upperFirst } = require('lodash');
+
 module.exports = function (babel) {
   const t = babel.types;
 
@@ -77,31 +79,28 @@ module.exports = function (babel) {
               decoratorExpression.arguments.push(decoratorObj);
             }
 
-            // If the `@property` decorator is missing an `attribute` property, and
-            // the class property name is camelCase, add the `attribute` property
-            // with the kebab-cased value.
+            // If the `@property` decorator is missing an `attribute` property,
+            // and the class property name is camelCase, add the `attribute`
+            // property with the kebab-cased value.
             if (!getObjectProperty(decoratorObj, 'attribute')) {
               const propName = path.node.key.name;
-              const attrName = camelToKebab(propName);
+              const attrName = kebabCase(propName);
               if (propName !== attrName) {
                 decoratorObj.properties.push(
-                  t.objectProperty(
-                    t.identifier('attribute'),
-                    t.stringLiteral(attrName),
-                  ),
+                  createObjectProperty('attribute', t.stringLiteral(attrName)),
                 );
               }
             }
 
-            // If the `@property` decorator is missing a `type` property, and the
-            // class property has either a type annotation or a default value,
-            // determine the js type (i.e. the primitive constructor) and add it as
-            // the `type` property.
+            // If the `@property` decorator is missing a `type` property, and
+            // the class property has either a type annotation or a default
+            // value, determine the js type (i.e. the primitive constructor) and
+            // add it as the `type` property.
             if (!getObjectProperty(decoratorObj, 'type')) {
-              const type = determineType(t, path.node);
+              const type = determineType(path.node);
               if (type) {
                 decoratorObj.properties.push(
-                  t.objectProperty(t.identifier('type'), t.identifier(type)),
+                  createObjectProperty('type', t.identifier(type)),
                 );
               } else {
                 throw path.buildCodeFrameError(
@@ -117,10 +116,7 @@ module.exports = function (babel) {
                 const type = typeProp.value.name;
                 if (shouldReflectProperty(type)) {
                   decoratorObj.properties.push(
-                    t.objectProperty(
-                      t.identifier('reflect'),
-                      t.booleanLiteral(true),
-                    ),
+                    createObjectProperty('reflect', t.booleanLiteral(true)),
                   );
                 }
               }
@@ -145,112 +141,105 @@ module.exports = function (babel) {
     return decorator ? decorator.expression : undefined;
   }
 
-  function determineType(t, node) {
+  function getObjectProperty(obj, attr) {
+    return obj.properties.find((p) => p.key.name === attr);
+  }
+
+  function createObjectProperty(key, value) {
+    return t.objectProperty(t.identifier(key), value);
+  }
+
+  function determineType(node) {
     if (t.isClassMethod(node)) {
       // @property decorator can be placed on a `getter` class method
       if (node.kind === 'get' && node.returnType) {
-        return determineTypeFromTypeAnnotation(
-          t,
-          node.returnType.typeAnnotation,
-        );
+        return determineTypeFromTypeAnnotation(node.returnType.typeAnnotation);
       }
       return null;
     }
 
     if (node.typeAnnotation) {
       return determineTypeFromTypeAnnotation(
-        t,
         node.typeAnnotation.typeAnnotation,
       );
     }
 
     if (node.value) {
-      return determineTypeFromNodeValue(t, node.value);
+      return determineTypeFromNodeValue(node.value);
     }
 
     return null;
   }
 
-  function determineTypeFromTypeAnnotation(t, node) {
+  function determineTypeFromTypeAnnotation(node) {
     if (t.isTSStringKeyword(node)) {
+      // field: string
       return 'String';
     }
 
     if (t.isTSNumberKeyword(node)) {
+      // field: number
       return 'Number';
     }
 
     if (t.isTSBooleanKeyword(node)) {
+      // field: boolean
       return 'Boolean';
     }
 
     if (t.isTSArrayType(node)) {
+      // field: string[]
       return 'Array';
     }
 
     if (t.isTSLiteralType(node)) {
+      // field: 'value';
+      // field: true;
       const value = node.literal.value;
       const type = typeof value;
-      return type.substr(0, 1).toUpperCase() + type.substr(1);
+      return upperFirst(type);
     }
 
     if (t.isTSTypeReference(node) || t.isTSTypeLiteral(node)) {
+      // field: MyInterface;
+      // field: { prop: string };
       return 'Object';
     }
 
     if (t.isTSUnionType(node)) {
-      return node.types.reduce((prevType, n) => {
-        const type = determineTypeFromTypeAnnotation(t, n);
-        if (prevType === null || prevType === type) {
-          return type;
-        }
-        return undefined;
-      }, null);
+      // field: 'blue' | 'green' | 'red';
+      return allSameOrNull(node.types, determineTypeFromTypeAnnotation);
     }
 
-    return undefined;
+    return null;
   }
 
-  function determineTypeFromNodeValue(t, node) {
-    if (t.isStringLiteral(node)) {
-      return 'String';
-    }
+  function determineTypeFromNodeValue(node) {
+    const type = [
+      [t.isStringLiteral, 'String'],
+      [t.isNumericLiteral, 'Number'],
+      [t.isBooleanLiteral, 'Boolean'],
+      [t.isObjectExpression, 'Object'],
+      [t.isArrayExpression, 'Array'],
+    ].find((cfg) => cfg[0](node));
 
-    if (t.isNumericLiteral(node)) {
-      return 'Number';
-    }
-
-    if (t.isBooleanLiteral(node)) {
-      return 'Boolean';
-    }
-
-    if (t.isObjectExpression(node)) {
-      return 'Object';
-    }
-
-    if (t.isArrayExpression(node)) {
-      return 'Array';
-    }
-
-    return undefined;
-  }
-
-  function camelToKebab(str) {
-    return str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
-  }
-
-  function getObjectProperty(obj, attr) {
-    return obj.properties.find((p) => p.key.name === attr);
+    return type ? type[1] : undefined;
   }
 
   function shouldReflectProperty(type) {
-    switch (type) {
-      case 'String':
-      case 'Number':
-      case 'Boolean':
-        return true;
-      default:
-        return false;
+    return ['String', 'Number', 'Boolean'].includes(type);
+  }
+
+  function allSameOrNull(values, convert) {
+    const [first, ...rest] = values;
+    const converted = convert(first);
+
+    for (const val of rest) {
+      if (converted !== convert(val)) {
+        return null;
+      }
     }
+
+    return converted;
   }
 };
