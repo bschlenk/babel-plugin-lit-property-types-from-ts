@@ -82,6 +82,9 @@ module.exports = function (babel) {
             // If the `@property` decorator is missing an `attribute` property,
             // and the class property name is camelCase, add the `attribute`
             // property with the kebab-cased value.
+            //
+            // TODO: can use
+            // https://github.com/Polymer/lit-element/blob/master/src/lib/updating-element.ts#L436
             if (!getObjectProperty(decoratorObj, 'attribute')) {
               const propName = path.node.key.name;
               const attrName = kebabCase(propName);
