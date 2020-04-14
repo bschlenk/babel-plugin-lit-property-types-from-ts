@@ -79,22 +79,6 @@ module.exports = function (babel) {
               decoratorExpression.arguments.push(decoratorObj);
             }
 
-            // If the `@property` decorator is missing an `attribute` property,
-            // and the class property name is camelCase, add the `attribute`
-            // property with the kebab-cased value.
-            //
-            // TODO: can use
-            // https://github.com/Polymer/lit-element/blob/master/src/lib/updating-element.ts#L436
-            if (!getObjectProperty(decoratorObj, 'attribute')) {
-              const propName = path.node.key.name;
-              const attrName = kebabCase(propName);
-              if (propName !== attrName) {
-                decoratorObj.properties.push(
-                  createObjectProperty('attribute', t.stringLiteral(attrName)),
-                );
-              }
-            }
-
             // If the `@property` decorator is missing a `type` property, and
             // the class property has either a type annotation or a default
             // value, determine the js type (i.e. the primitive constructor) and
@@ -108,6 +92,22 @@ module.exports = function (babel) {
               } else {
                 throw path.buildCodeFrameError(
                   `Could not determine the type for this @property decorated field, please explicity add a type`,
+                );
+              }
+            }
+
+            // If the `@property` decorator is missing an `attribute` property,
+            // and the class property name is camelCase, add the `attribute`
+            // property with the kebab-cased value.
+            //
+            // TODO: can use
+            // https://github.com/Polymer/lit-element/blob/master/src/lib/updating-element.ts#L436
+            if (!getObjectProperty(decoratorObj, 'attribute')) {
+              const propName = path.node.key.name;
+              const attrName = kebabCase(propName);
+              if (propName !== attrName) {
+                decoratorObj.properties.push(
+                  createObjectProperty('attribute', t.stringLiteral(attrName)),
                 );
               }
             }
