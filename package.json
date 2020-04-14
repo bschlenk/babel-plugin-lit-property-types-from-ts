@@ -1,0 +1,25 @@
+{
+  "name": "babel-plugin-lit-property-sugar",
+  "version": "1.0.0",
+  "description": "Automated lit-element property config - type from TypeScript annotation, kebab-cased attributes, reflect primitives.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bschlenk/babel-plugin-lit-property-sugar.git"
+  },
+  "keywords": [
+    "lit-element",
+    "lit",
+    "babel",
+    "property"
+  ],
+  "author": "Brian Schlenker <bschlenk@umich.edu>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bschlenk/babel-plugin-lit-property-sugar/issues"
+  },
+  "homepage": "https://github.com/bschlenk/babel-plugin-lit-property-sugar#readme"
+}
