@@ -1,27 +1,29 @@
 {
-  "name": "babel-plugin-lit-property-sugar",
+  "name": "babel-plugin-lit-property-types-from-ts",
   "version": "1.0.0",
-  "description": "Automated lit-element property config - type from TypeScript annotation, kebab-cased attributes, reflect primitives.",
+  "description": "Automatically set lit-element property types from their TS type annotations.",
   "main": "index.js",
   "scripts": {
     "test": "jest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bschlenk/babel-plugin-lit-property-sugar.git"
+    "url": "git+https://github.com/bschlenk/babel-plugin-lit-property-types-from-ts.git"
   },
   "keywords": [
     "lit-element",
     "lit",
     "babel",
-    "property"
+    "property",
+    "type",
+    "type annotation"
   ],
   "author": "Brian Schlenker <bschlenk@umich.edu>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/bschlenk/babel-plugin-lit-property-sugar/issues"
+    "url": "https://github.com/bschlenk/babel-plugin-lit-property-types-from-ts/issues"
   },
-  "homepage": "https://github.com/bschlenk/babel-plugin-lit-property-sugar#readme",
+  "homepage": "https://github.com/bschlenk/babel-plugin-lit-property-types-from-ts#readme",
   "dependencies": {
     "lodash": "^4.17.15"
   },
