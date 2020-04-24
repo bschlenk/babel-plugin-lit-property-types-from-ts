@@ -1,32 +1,30 @@
 /**
- * This plugin DRYs up lit-element's `property` decorator by adding the
- * following sugar:
+ * This plugin DRYs up lit-element's `property` decorator by automatically
+ * determining the value for `type` based on the decorated field's TS type
+ * annotation.
  *
- * The `type` option is automatically determined by TypeScript type of the
- * decorated field. The correct type is inferred even when omitting the type
- * annotation when setting default values.
+ * `String` types are omitted since this is the default.
  *
- * The `attribute` option is automatically set if the decorated field is
- * camelCase - it will be set to the kebab-case form of the field.
- *
- * The `reflect` option is automatically set for values with primitive types,
- * i.e. string, number, & boolean.
- *
- * This plugin will not override explicitly set `type`, `attribute`, and
- * `reflect` options, allowing for explicit overrides if needed.
+ * This plugin will not override explicitly set `type` values.
  *
  * Example input:
  *
  * ```js
  * class MyElement extends LitElement {
  *   @property()
- *   myField: string;
+ *   prop1: string;
  *
  *   @property()
- *   expanded: boolean;
+ *   prop2: boolean;
  *
- *   @property({ type: Number })
- *   someValue: string;
+ *   @property()
+ *   prop3: number;
+ *
+ *   @property()
+ *   prop4: MyObject[];
+ *
+ *   @property()
+ *   prop5 = false;
  * }
  * ```
  *
@@ -34,14 +32,20 @@
  *
  * ```js
  * class MyElement extends LitElement {
- *   @property({ type: String, attribute: 'my-field', reflect: true })
- *   myField: string;
+ *   @property()
+ *   prop1: string;
  *
- *   @property({ type: Boolean, reflect: true })
- *   expanded: boolean;
+ *   @property({ type: Boolean })
+ *   prop2: boolean;
  *
- *   @property({ type: Number, attribute: 'some-value', reflect: true })
- *   someValue: string;
+ *   @property({ type: Number })
+ *   prop3: number;
+ *
+ *   @property({ type: Array })
+ *   prop4: MyObject[];
+ *
+ *   @property({ type: Boolean })
+ *   prop5 = false;
  * }
  * ```
  */
@@ -53,6 +57,8 @@ module.exports = function (babel) {
 
   return {
     visitor: {
+      // we must start from `Program`, otherwise the TS plugin will strip out
+      // types before we have a chance to look at them
       Program(path) {
         path.traverse({
           'ClassProperty|ClassMethod'(path) {
@@ -62,68 +68,49 @@ module.exports = function (babel) {
             );
 
             if (!decoratorExpression) {
-              // node doesn't have a `property` decorator that is a CallExpression
+              // node doesn't have a `property` decorator
+              // that is a CallExpression
               return;
             }
 
             if (decoratorExpression.arguments.length > 1) {
               throw path.buildCodeFrameError(
-                `Expected @property decorator to have at most 1 argument, but found ${decoratorExpression.arguments.length}`,
+                `Expected @property decorator to have at most 1 argument, ` +
+                  `but found ${decoratorExpression.arguments.length}`,
               );
             }
 
-            // Create the decorator object arg if it does not exist
             let decoratorObj = decoratorExpression.arguments[0];
+
+            if (getObjectProperty(decoratorObj, 'type')) {
+              // this property already has a `type` value, skip it
+              return;
+            }
+
+            const type = determineType(path.node);
+            if (!type) {
+              throw path.buildCodeFrameError(
+                `Could not determine the type for this @property ` +
+                  `decorated field, please explicity add a type`,
+              );
+            }
+
+            if (type === 'String') {
+              // `String` is the default type for lit-element properties, we can
+              // omit it
+              return;
+            }
+
+            // if the decorator didn't already have an options argument, we have
+            // to create it first
             if (!decoratorObj) {
               decoratorObj = t.objectExpression([]);
               decoratorExpression.arguments.push(decoratorObj);
             }
 
-            // If the `@property` decorator is missing a `type` property, and
-            // the class property has either a type annotation or a default
-            // value, determine the js type (i.e. the primitive constructor) and
-            // add it as the `type` property.
-            if (!getObjectProperty(decoratorObj, 'type')) {
-              const type = determineType(path.node);
-              if (type) {
-                decoratorObj.properties.push(
-                  createObjectProperty('type', t.identifier(type)),
-                );
-              } else {
-                throw path.buildCodeFrameError(
-                  `Could not determine the type for this @property decorated field, please explicity add a type`,
-                );
-              }
-            }
-
-            // If the `@property` decorator is missing an `attribute` property,
-            // and the class property name is camelCase, add the `attribute`
-            // property with the kebab-cased value.
-            //
-            // TODO: can use
-            // https://github.com/Polymer/lit-element/blob/master/src/lib/updating-element.ts#L436
-            if (!getObjectProperty(decoratorObj, 'attribute')) {
-              const propName = path.node.key.name;
-              const attrName = kebabCase(propName);
-              if (propName !== attrName) {
-                decoratorObj.properties.push(
-                  createObjectProperty('attribute', t.stringLiteral(attrName)),
-                );
-              }
-            }
-
-            if (!getObjectProperty(decoratorObj, 'reflect')) {
-              const typeProp = getObjectProperty(decoratorObj, 'type');
-
-              if (typeProp) {
-                const type = typeProp.value.name;
-                if (shouldReflectProperty(type)) {
-                  decoratorObj.properties.push(
-                    createObjectProperty('reflect', t.booleanLiteral(true)),
-                  );
-                }
-              }
-            }
+            decoratorObj.properties.push(
+              createObjectProperty('type', t.identifier(type)),
+            );
           },
         });
       },
@@ -141,10 +128,13 @@ module.exports = function (babel) {
         d.expression.callee.name === name,
     );
 
+    // TODO: should we throw if we encounter a @property decorator that isn't a
+    // call expression? That would most likely be a bug...
     return decorator ? decorator.expression : undefined;
   }
 
   function getObjectProperty(obj, attr) {
+    if (!obj) return undefined;
     return obj.properties.find((p) => p.key.name === attr);
   }
 
@@ -227,10 +217,6 @@ module.exports = function (babel) {
     ].find((cfg) => cfg[0](node));
 
     return type ? type[1] : undefined;
-  }
-
-  function shouldReflectProperty(type) {
-    return ['String', 'Number', 'Boolean'].includes(type);
   }
 
   function allSameOrNull(values, convert) {
