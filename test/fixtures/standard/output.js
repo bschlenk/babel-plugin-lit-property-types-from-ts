@@ -1,19 +1,37 @@
+interface MyInterface {}
+
 class MyElement extends LitElement {
-  @property({
-    type: String,
-    attribute: 'my-field',
-    reflect: true,
-  })
+  @property()
   myField: string;
   @property({
     type: Boolean,
-    reflect: true,
   })
   expanded: boolean;
   @property({
     type: Number,
-    attribute: 'some-value',
-    reflect: true,
   })
   someValue: string;
+  @property({
+    attribute: 'another-field',
+    type: Number,
+  })
+  anotherField: number;
+  @property({
+    type: Array,
+  })
+  field5: string[];
+  @property()
+  field6: 'value';
+  @property({
+    type: Object,
+  })
+  field7: MyInterface;
+  @property({
+    type: Object,
+  })
+  field8: {
+    prop: string,
+  };
+  @property()
+  field9: 'blue' | 'green' | 'red';
 }

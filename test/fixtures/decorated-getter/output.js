@@ -1,9 +1,5 @@
 class MyElement extends LitElement {
-  @property({
-    type: String,
-    attribute: 'my-field',
-    reflect: true,
-  })
+  @property()
   get myField(): string {
     return this._val;
   }
