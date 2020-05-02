@@ -11,9 +11,10 @@
     "url": "git+https://github.com/bschlenk/babel-plugin-lit-property-types-from-ts.git"
   },
   "keywords": [
+    "babel",
+    "babel-plugin",
     "lit-element",
     "lit",
-    "babel",
     "property",
     "type",
     "typescript",
