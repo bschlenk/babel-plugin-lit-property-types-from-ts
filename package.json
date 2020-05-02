@@ -16,6 +16,7 @@
     "babel",
     "property",
     "type",
+    "typescript",
     "type annotation"
   ],
   "author": "Brian Schlenker <bschlenk@umich.edu>",
@@ -24,9 +25,6 @@
     "url": "https://github.com/bschlenk/babel-plugin-lit-property-types-from-ts/issues"
   },
   "homepage": "https://github.com/bschlenk/babel-plugin-lit-property-types-from-ts#readme",
-  "dependencies": {
-    "lodash": "^4.17.15"
-  },
   "devDependencies": {
     "@babel/plugin-syntax-class-properties": "^7.8.3",
     "@babel/plugin-syntax-decorators": "^7.8.3",

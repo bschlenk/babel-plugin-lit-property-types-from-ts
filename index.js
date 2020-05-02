@@ -50,8 +50,6 @@
  * ```
  */
 
-const { kebabCase, upperFirst } = require('lodash');
-
 module.exports = function (babel) {
   const t = babel.types;
 
@@ -232,3 +230,7 @@ module.exports = function (babel) {
     return converted;
   }
 };
+
+function upperFirst(str) {
+  return str[0].toUpperCase() + str.substr(1);
+}
