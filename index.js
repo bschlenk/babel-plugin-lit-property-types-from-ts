@@ -85,6 +85,12 @@ module.exports = function (babel) {
               return;
             }
 
+            const attribute = getObjectProperty(decoratorObj, 'attribute');
+            if (attribute && isBooleanValue(attribute.value, false)) {
+              // this property is not reflected to an attribute, no need to add a type
+              return;
+            }
+
             const type = determineType(path.node);
             if (!type) {
               throw path.buildCodeFrameError(
@@ -228,6 +234,10 @@ module.exports = function (babel) {
     }
 
     return converted;
+  }
+
+  function isBooleanValue(node, expected) {
+    return t.isBooleanLiteral(node) && node.value === expected;
   }
 };
 
