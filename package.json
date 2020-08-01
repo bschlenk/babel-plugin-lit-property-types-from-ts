@@ -27,15 +27,15 @@
   },
   "homepage": "https://github.com/bschlenk/babel-plugin-lit-property-types-from-ts#readme",
   "devDependencies": {
-    "@babel/plugin-syntax-class-properties": "^7.8.3",
-    "@babel/plugin-syntax-decorators": "^7.8.3",
-    "@babel/plugin-syntax-typescript": "^7.8.3",
-    "@commitlint/cli": "^8.3.5",
-    "@commitlint/config-conventional": "^8.3.4",
-    "babel-plugin-tester": "^9.0.1",
+    "@babel/plugin-syntax-class-properties": "^7.10.4",
+    "@babel/plugin-syntax-decorators": "^7.10.4",
+    "@babel/plugin-syntax-typescript": "^7.10.4",
+    "@commitlint/cli": "^9.1.2",
+    "@commitlint/config-conventional": "^9.1.1",
+    "babel-plugin-tester": "^9.2.0",
     "husky": "^4.2.5",
-    "jest": "^25.3.0",
-    "lint-staged": "^10.2.2",
+    "jest": "^26.2.2",
+    "lint-staged": "^10.2.11",
     "prettier": "^2.0.5"
   },
   "husky": {
