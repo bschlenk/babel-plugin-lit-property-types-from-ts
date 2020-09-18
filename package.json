@@ -4,7 +4,8 @@
   "description": "Automatically set lit-element property types from their TS type annotations.",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepublishOnly": "npm run test"
   },
   "repository": {
     "type": "git",
