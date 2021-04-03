@@ -9,6 +9,8 @@ a `typeof` check against the default value.
 
 Lit-element will use its built in `String` converter if `type` is omitted, so
 we'll only add `type` if your property is not a string (reducing bundle size!).
+We'll also omit the `type` when `attribute: false` is set, since the `type` is
+only used when converting between attribute and property.
 
 If you don't think the inferred `type` would be correct, you can manually supply
 the `type` and this plugin will leave it alone.
@@ -98,6 +100,20 @@ field: MyType[];
 // Out
 @property({ type: Array })
 field: MyType[];
+```
+
+---
+
+Omit `type` when `attribute: false`
+
+```js
+// In
+@property({ attribute: false })
+field: SomeType;
+
+// Out
+@property({ attribute: false })
+field: SomeType;
 ```
 
 [@babel/preset-typescript]: https://babeljs.io/docs/en/babel-preset-typescript
