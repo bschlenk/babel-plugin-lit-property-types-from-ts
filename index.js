@@ -3,7 +3,8 @@
  * determining the value for `type` based on the decorated field's TS type
  * annotation.
  *
- * `String` types are omitted since this is the default.
+ * `String` types are omitted since this is the default. `type` is also
+ * omitted when `attribute: false` is set.
  *
  * This plugin will not override explicitly set `type` values.
  *
@@ -25,6 +26,9 @@
  *
  *   @property()
  *   prop5 = false;
+ *
+ *   @property({ attribute: false })
+ *   prop6: string;
  * }
  * ```
  *
@@ -46,6 +50,9 @@
  *
  *   @property({ type: Boolean })
  *   prop5 = false;
+ *
+ *   @property({ attribute: false })
+ *   prop6: string;
  * }
  * ```
  */
@@ -184,8 +191,14 @@ module.exports = function (babel) {
       return 'Boolean';
     }
 
-    if (t.isTSArrayType(node)) {
+    if (
+      t.isTSArrayType(node) ||
+      t.isTSTupleType(node) ||
+      (t.isTSTypeReference(node) && node.typeName.name === 'Array')
+    ) {
       // field: string[]
+      // field: [string, number]
+      // field: Array<string>
       return 'Array';
     }
 
